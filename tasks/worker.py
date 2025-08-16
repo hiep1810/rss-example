@@ -1,19 +1,11 @@
 from celery import Celery
 from scrapers.vietstock import scrape_vietstock_articles
 
-# Configure Celery
-celery_app = Celery(
-    'tasks',
-    broker='redis://localhost:6379/0',
-    backend='redis://localhost:6379/0'
-)
+# Create Celery app instance
+celery_app = Celery('tasks')
 
-celery_app.conf.update(
-    task_serializer='json',
-    result_serializer='json',
-    accept_content=['json'],
-    task_ignore_result=False
-)
+# Load configuration from a separate file
+celery_app.config_from_object('celeryconfig')
 
 @celery_app.task
 def run_vietstock_scraper():

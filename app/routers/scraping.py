@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from tasks.worker import run_vietstock_scraper, celery_app
-from celery.result import AsyncResult
+from tasks.worker import celery_app
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ def get_scrape_status(task_id: str):
     """
     Checks the status of a scraping task.
     """
-    task_result = AsyncResult(task_id, app=celery_app)
+    task_result = celery_app.AsyncResult(task_id, app=celery_app)
     result = {
         "task_id": task_id,
         "status": task_result.status,
