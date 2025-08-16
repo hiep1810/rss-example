@@ -5,6 +5,7 @@ from typing import List
 import feedparser
 import csv
 import time
+import os
 
 def _scrape_rss_links(url: str) -> List[str]:
     """
@@ -73,7 +74,10 @@ def scrape_vietstock_articles() -> str:
     if not rss_links:
         return "No RSS links found. Scraping aborted."
 
-    csv_file = f"vietstock_articles_{int(time.time())}.csv"
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    csv_file = os.path.join(output_dir, f"vietstock_articles_{int(time.time())}.csv")
     csv_headers = ["Title", "Link", "Published", "Content"]
 
     with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
