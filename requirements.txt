@@ -1,3 +1,7 @@
 feedparser
 beautifulsoup4
 requests
+fastapi
+uvicorn
+celery
+redis
