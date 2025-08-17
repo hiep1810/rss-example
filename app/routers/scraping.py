@@ -22,9 +22,15 @@ def get_scrape_status(task_id: str):
     Never guesses NOT_FOUND based on raw backend reads.
     """
     task = AsyncResult(task_id, app=celery_app)
-    state = task.state  # alias of .status
+    state = task.state
 
-    # SUCCESS
+    # Check if this task ID ever existed in backend
+    if state == states.PENDING and task.backend.get(task.id) is None:
+        return JSONResponse(
+            status_code=404,
+            content={"task_id": task_id, "status": "NOT_FOUND", "result": None}
+        )
+
     if state == states.SUCCESS:
         return JSONResponse(
             status_code=200,
