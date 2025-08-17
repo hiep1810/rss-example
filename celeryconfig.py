@@ -15,3 +15,4 @@ accept_content = ['json']
 
 # Other settings
 task_ignore_result = False
+result_expires = 3600  # Keep results for 1 hour
