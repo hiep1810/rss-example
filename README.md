@@ -41,7 +41,7 @@ This project is a web scraper for fetching articles from `vietstock.vn` via its 
 
 2. **Start the Celery worker:**
    ```bash
-   celery -A tasks.worker worker --loglevel=info
+   celery -A tasks.celery_app worker --loglevel=info
    ```
 
 3. **Start the FastAPI application:**

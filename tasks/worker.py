@@ -22,6 +22,7 @@ def run_vietstock_scraper(self):
     """
     Celery task that runs the Vietstock article scraper and schedules a cleanup task.
     """
+    self.update_state(state='PROGRESS', meta={'status': 'Scraping started'})
     result = scrape_vietstock_articles()
     file_path = result.get("file_path")
 
