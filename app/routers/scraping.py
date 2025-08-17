@@ -18,7 +18,7 @@ def get_scrape_status(task_id: str):
     """
     Checks the status of a scraping task.
     """
-    task_result = celery_app.AsyncResult(task_id, app=celery_app)
+    task_result = celery_app.AsyncResult(task_id)
     result = {
         "task_id": task_id,
         "status": task_result.status,
