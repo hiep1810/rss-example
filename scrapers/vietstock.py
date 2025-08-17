@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-from typing import List
+from typing import List, Dict
 import feedparser
 import csv
 import time
@@ -59,20 +59,20 @@ def _scrape_articles_from_feed(feed_url: str, csv_writer):
         else:
             print(f"⚠️ Could not find article content for: {entry.link}")
 
-def scrape_vietstock_articles() -> str:
+def scrape_vietstock_articles() -> Dict[str, str]:
     """
     Main function to orchestrate the Vietstock article scraping process.
     Finds all RSS feeds and scrapes every article, saving them to a CSV file.
 
     Returns:
-        The path to the generated CSV file.
+        A dictionary containing the path to the generated CSV file and a message.
     """
     start_time = time.time()
     base_url = "https://vietstock.vn/rss"
     rss_links = _scrape_rss_links(base_url)
 
     if not rss_links:
-        return "No RSS links found. Scraping aborted."
+        return {"message": "No RSS links found. Scraping aborted.", "file_path": None}
 
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
@@ -88,6 +88,10 @@ def scrape_vietstock_articles() -> str:
             _scrape_articles_from_feed(link, writer)
 
     end_time = time.time()
+    total_time = f"{end_time - start_time:.2f}"
     print(f"✅ All data has been successfully saved to {csv_file}")
-    print(f"⏳ Total execution time: {end_time - start_time:.2f} seconds")
-    return csv_file
+    print(f"⏳ Total execution time: {total_time} seconds")
+    return {
+        "message": f"Scraping completed in {total_time} seconds.",
+        "file_path": csv_file
+    }
