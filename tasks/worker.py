@@ -1,11 +1,5 @@
-from celery import Celery
+from .celery_app import celery_app
 from scrapers.vietstock import scrape_vietstock_articles
-
-# Create Celery app instance
-celery_app = Celery('tasks', include=['tasks.worker'])
-
-# Load configuration from a separate file
-celery_app.config_from_object('celeryconfig')
 
 @celery_app.task
 def run_vietstock_scraper():

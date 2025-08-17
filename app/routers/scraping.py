@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from tasks.worker import run_vietstock_scraper, add, celery_app
+from tasks.worker import run_vietstock_scraper, add
+from tasks.celery_app import celery_app
 from celery.result import AsyncResult
 
 router = APIRouter()
