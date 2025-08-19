@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse, FileResponse
 from tasks.worker import run_vietstock_scraper, add
 from tasks.celery_app import celery_app
@@ -9,11 +9,12 @@ from celery import states
 router = APIRouter()
 
 @router.post("/scrape/vietstock")
-def start_vietstock_scrape():
+def start_vietstock_scrape(max_chars: int = Query(None, description="Stop scraping after reaching this many characters.")):
     """
     Starts the Vietstock scraping task in the background.
+    Optionally stops scraping after a character limit is reached.
     """
-    task = run_vietstock_scraper.delay()
+    task = run_vietstock_scraper.delay(max_chars=max_chars)
     return JSONResponse({"task_id": task.id})
 
 @router.get("/scrape/status/{task_id}")

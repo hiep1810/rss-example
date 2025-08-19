@@ -18,12 +18,12 @@ def cleanup_file(file_path: str):
         logging.error(f"Error deleting file {file_path}: {e}")
 
 @celery_app.task(bind=True)
-def run_vietstock_scraper(self):
+def run_vietstock_scraper(self, max_chars: int = None):
     """
     Celery task that runs the Vietstock article scraper and schedules a cleanup task.
     """
     self.update_state(state='PROGRESS', meta={'status': 'Scraping started'})
-    result = scrape_vietstock_articles()
+    result = scrape_vietstock_articles(max_chars=max_chars)
     file_path = result.get("file_path")
 
     if file_path:

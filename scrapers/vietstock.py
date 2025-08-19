@@ -38,15 +38,20 @@ def _scrape_rss_links(url: str) -> List[str]:
     logging.info(f"Found {len(rss_links)} unique RSS links.")
     return rss_links
 
-def _scrape_articles_from_feed(feed_url: str, csv_writer):
+def _scrape_articles_from_feed(feed_url: str, csv_writer, current_char_count: int, max_chars: int) -> (int, bool):
     """
     Parses an RSS feed and scrapes the content of each article.
     (Internal helper function)
+    Returns the updated character count and a boolean indicating if the max_chars limit was reached.
     """
     logging.info(f"Processing feed: {feed_url}")
     feed = feedparser.parse(feed_url)
     
     for entry in feed.entries:
+        if max_chars and current_char_count >= max_chars:
+            logging.info(f"Max character limit ({max_chars}) reached. Stopping scraping.")
+            return current_char_count, True
+
         logging.info(f"Scraping: {entry.title}")
         try:
             response = requests.get(entry.link, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
@@ -61,14 +66,27 @@ def _scrape_articles_from_feed(feed_url: str, csv_writer):
         if article_body:
             paragraphs = article_body.find_all('p')
             content = "\n".join(p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True))
+            
+            # Check if adding this content would exceed the limit
+            if max_chars and (current_char_count + len(content)) > max_chars:
+                logging.info(f"Adding article '{entry.title}' would exceed max character limit ({max_chars}). Stopping scraping.")
+                return current_char_count, True
+
             csv_writer.writerow([entry.title, entry.link, entry.published, content])
+            current_char_count += len(content)
         else:
             logging.warning(f"Could not find article content for: {entry.link}")
+    
+    return current_char_count, False
 
-def scrape_vietstock_articles() -> Dict[str, str]:
+def scrape_vietstock_articles(max_chars: int = None) -> Dict[str, str]:
     """
     Main function to orchestrate the Vietstock article scraping process.
-    Finds all RSS feeds and scrapes every article, saving them to a CSV file.
+    Finds all RSS feeds and scrapes articles, saving them to a CSV file.
+    Stops scraping if max_chars limit is provided and reached.
+
+    Args:
+        max_chars (int, optional): Maximum number of characters to scrape. Defaults to None.
 
     Returns:
         A dictionary containing the path to the generated CSV file and a message.
@@ -84,19 +102,29 @@ def scrape_vietstock_articles() -> Dict[str, str]:
 
     csv_file = os.path.join(output_dir, f"vietstock_articles_{int(time.time())}.csv")
     csv_headers = ["Title", "Link", "Published", "Content"]
+    
+    current_char_count = 0
+    max_chars_reached = False
 
     with open(csv_file, mode='w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(csv_headers)
 
         for link in rss_links:
-            _scrape_articles_from_feed(link, writer)
+            current_char_count, max_chars_reached = _scrape_articles_from_feed(link, writer, current_char_count, max_chars)
+            if max_chars_reached:
+                break # Stop processing further feeds
 
     end_time = time.time()
     total_time = f"{end_time - start_time:.2f}"
     logging.info(f"All data has been successfully saved to {csv_file}")
     logging.info(f"Total execution time: {total_time} seconds")
+    
+    message = f"Scraping completed in {total_time} seconds."
+    if max_chars_reached:
+        message += f" (Stopped due to character limit of {max_chars} reached)."
+
     return {
-        "message": f"Scraping completed in {total_time} seconds.",
+        "message": message,
         "file_path": csv_file
     }
